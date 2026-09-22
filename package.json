@@ -1,21 +1,23 @@
 {
-  "name": "5.5-map",
+  "name": "pune-east-3d",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Interactive 3D model of East Pune built from OpenStreetMap data",
+  "type": "module",
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite --port 3003 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 3003",
+    "data:fetch": "node scripts/fetch-osm.mjs",
+    "data:build": "node scripts/build-data.mjs",
+    "data": "node scripts/fetch-osm.mjs && node scripts/build-data.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "earcut": "^3.2.3",
     "three": "^0.186.0"
   },
   "devDependencies": {
-    "three-mesh-bvh": "^0.9.15",
+    "pngjs": "^7.0.0",
     "vite": "^8.3.0"
   }
 }
