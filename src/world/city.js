@@ -310,25 +310,42 @@ export class City {
     }
   }
 
+  // Make every LOD mesh visible and shadow-casting for one render so all geometry,
+  // textures and shadow programs are uploaded/compiled before the user sees motion.
+  warmup(render) {
+    const saved = [];
+    const show = (m, cast) => {
+      saved.push([m, m.visible, m.castShadow, m.frustumCulled]);
+      m.visible = true;
+      m.frustumCulled = false; // off-screen tiles would otherwise upload mid-flight
+      if (cast) m.castShadow = true;
+    };
+    for (const t of this.tiles) for (const m of t.meshes) show(m.mesh, true);
+    for (const t of this.treeTiles) { show(t.near, true); show(t.far, false); }
+    for (const g of [this.groups.roads, this.groups.water, this.groups.terrain]) g.traverse((o) => o.isMesh && show(o, o.castShadow));
+    render();
+    for (const [m, v, c, f] of saved) { m.visible = v; m.castShadow = c; m.frustumCulled = f; }
+  }
+
   // Distance-based level of detail.
   updateLOD(camera) {
+    // True 3D distance: from high up everything is far away, so detail drops
+    // (and the view stays smooth) exactly when it can't be seen anyway.
     const cp = camera.position;
     const alt = Math.max(0, cp.y - this.ground(cp.x, cp.z));
-    const minorDist = 2600 + alt * 1.2;
     for (const t of this.tiles) {
-      const d = Math.hypot(t.cx - cp.x, t.cz - cp.z);
+      const d = Math.hypot(t.cx - cp.x, t.cz - cp.z, alt);
       for (const m of t.meshes) {
-        if (m.lod === 'minor') m.mesh.visible = d < minorDist;
-        m.mesh.castShadow = d < 4200;
+        if (m.lod === 'minor') m.mesh.visible = d < 4200;
+        m.mesh.castShadow = d < 5000 && (m.lod === 'major' || d < 2500);
         m.pick.visible = m.mesh.visible && this.groups.buildings.visible;
       }
     }
-    const treeNear = 1700 + alt * 0.4;
-    const treeFar = 7500 + alt * 1.5;
     for (const t of this.treeTiles) {
-      const d = Math.hypot(t.cx - cp.x, t.cz - cp.z);
-      t.near.visible = d < treeNear;
-      t.far.visible = d >= treeNear && d < treeFar;
+      const d = Math.hypot(t.cx - cp.x, t.cz - cp.z, alt);
+      t.near.visible = d < 1900;
+      t.near.castShadow = d < 1500;
+      t.far.visible = d >= 1900 && d < 11000;
     }
   }
 

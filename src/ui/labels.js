@@ -55,7 +55,7 @@ export class Labels {
       for (const r of placed) if (x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]) { hit = true; break; }
       if (hit && !it.el.classList.contains('sel')) { this.hide(it); continue; }
       placed.push([x0, y0, x1, y1]);
-      it.el.style.transform = `translate(${(sx - it.w / 2).toFixed(1)}px, ${(sy - it.h).toFixed(1)}px)`;
+      it.el.style.transform = `translate3d(${(sx - it.w / 2).toFixed(1)}px, ${(sy - it.h).toFixed(1)}px, 0)`;
       const op = c.alpha.toFixed(2);
       if (it.op !== op) { it.el.style.opacity = op; it.op = op; }
       it.el.style.pointerEvents = c.alpha > 0.3 ? '' : 'none';

@@ -90,6 +90,12 @@ Responses are cached in `localStorage` for a week.
   - Gradient-dome image-based lighting.
   - ACES tone mapping and selective bloom for lights at night.
 
+### Smooth start
+
+Before the loader fades, the app renders warm-up frames from the intro's key viewpoints. These frames upload every mesh, texture, shadow program and label measurement, so the fly-in doesn't stall. The camera animation eases around its target and absorbs occasional slow frames instead of jumping.
+
+Shadows use a 2048² map by default. Add `?quality=high` for 4096².
+
 ## Refreshing the data
 
 ```bash

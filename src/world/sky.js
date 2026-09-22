@@ -74,7 +74,9 @@ export class Atmosphere {
     // Lights.
     this.sun = new THREE.DirectionalLight(0xffffff, 3);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(4096, 4096);
+    // 2048² is half the cost of 4096² with no visible loss at city scale; ?quality=high opts in.
+    const hi = new URLSearchParams(location.search).get('quality') === 'high';
+    this.sun.shadow.mapSize.set(hi ? 4096 : 2048, hi ? 4096 : 2048);
     this.sun.shadow.bias = -0.00025;
     this.sun.shadow.normalBias = 0.6;
     const sc = this.sun.shadow.camera;

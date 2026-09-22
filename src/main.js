@@ -84,13 +84,38 @@ async function init() {
   setupUI(data);
   setTime(initialHour());
 
-  setProgress(0.97, 'Compiling shaders');
+  setProgress(0.96, 'Compiling shaders');
   try { await renderer.compileAsync(scene, camera); } catch {}
+  await warmup();
   setProgress(1, 'Ready');
   $('loader').classList.add('done');
   resetView(3.2);
   loop();
 }
+// Render a few frames behind the loader so every mesh, texture, shadow program and
+// label measurement happens before the intro flight starts, not during it.
+async function warmup() {
+  setProgress(0.98, 'Warming up the GPU');
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+  const pos = camera.position.clone(), quat = camera.quaternion.clone();
+  const views = [[pos.x, pos.y, pos.z, 0, 0, 0], [-150 - 2000, 2600, 350 + 3900, -150, 30, 350], [0, 400, 900, 0, 30, 0]];
+  for (const [x, y, z, tx, ty, tz] of views) {
+    camera.position.set(x, y, z);
+    camera.lookAt(tx, ty, tz);
+    camera.updateMatrixWorld();
+    const f = new THREE.Vector3(tx, ty, tz);
+    atmosphere.update(camera, f, camera.position.distanceTo(f));
+    city.warmup(() => composer.render(0.016));
+    life.update(0.016, 0, camera);
+    await nextFrame();
+  }
+  pick(10, 10); // compiles the picking shaders
+  labels.update(canvas.clientWidth, canvas.clientHeight); // measures every label once
+  camera.position.copy(pos);
+  camera.quaternion.copy(quat);
+  await nextFrame();
+}
+
 init().catch((err) => {
   console.error(err);
   loaderStep.textContent = 'Failed to build the city: ' + err.message;
@@ -519,10 +544,17 @@ function loop() {
     const fps = perf.frames / perf.acc;
     perf.frames = 0;
     perf.acc = 0;
-    const max = Math.min(window.devicePixelRatio, 1.75);
-    if (fps < 38 && pixelRatio > 0.8) setPixelRatio(pixelRatio - 0.25);
-    else if (fps > 57 && pixelRatio < max) setPixelRatio(Math.min(max, pixelRatio + 0.25));
     $('stats').dataset.fps = Math.round(fps);
+    // Resizing render targets causes a hitch, so never do it mid-animation or in the
+    // first seconds, and only after two consistent measurements.
+    if (rig.anim || time < 6) perf.low = perf.high = 0;
+    else {
+      const max = Math.min(window.devicePixelRatio, 1.75);
+      perf.low = fps < 38 ? perf.low + 1 : 0;
+      perf.high = fps > 57 ? perf.high + 1 : 0;
+      if (perf.low >= 2 && pixelRatio > 0.8) { setPixelRatio(pixelRatio - 0.25); perf.low = 0; }
+      else if (perf.high >= 3 && pixelRatio < max) { setPixelRatio(Math.min(max, pixelRatio + 0.25)); perf.high = 0; }
+    }
   }
 }
 

@@ -149,21 +149,25 @@ export class CameraRig {
   flyTo(target, { distance = 600, polar = 58, azimuth = null, duration = 2.2 } = {}) {
     if (this.mode === 'fly') this.setMode('orbit');
     const cam = this.camera;
-    const fromPos = cam.position.clone();
+    // Start from the current view expressed around the current target.
     const fromTgt = this.orbit.target.clone();
-    const az = azimuth ?? Math.atan2(cam.position.x - fromTgt.x, cam.position.z - fromTgt.z);
-    const ph = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(polar, 5, 80));
+    const off = new THREE.Spherical().setFromVector3(cam.position.clone().sub(fromTgt));
     const toTgt = target.clone();
     distance = THREE.MathUtils.clamp(distance, this.orbit.minDistance, this.orbit.maxDistance);
-    const toPos = new THREE.Vector3(
-      toTgt.x + distance * Math.sin(ph) * Math.sin(az),
-      toTgt.y + distance * Math.cos(ph),
-      toTgt.z + distance * Math.sin(ph) * Math.cos(az),
-    );
+    const toPhi = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(polar, 5, 80));
+    let toTheta = azimuth ?? off.theta;
+    // Turn the short way round.
+    while (toTheta - off.theta > Math.PI) toTheta -= 2 * Math.PI;
+    while (toTheta - off.theta < -Math.PI) toTheta += 2 * Math.PI;
     const travel = fromTgt.distanceTo(toTgt);
-    const lift = Math.min(2500, travel * 0.35);
+    // Pull back (in log-distance) while travelling far, so long hops arc gracefully.
+    const bump = Math.log(1 + travel / Math.max(300, Math.min(off.radius, distance))) * 0.35;
     const dur = duration * THREE.MathUtils.clamp(0.6 + travel / 5000, 0.7, 1.6);
-    this.anim = { t: 0, dur, fromPos, toPos, fromTgt, toTgt, lift };
+    this.anim = {
+      t: 0, dur, fromTgt, toTgt, bump,
+      d0: Math.log(Math.max(1, off.radius)), d1: Math.log(distance),
+      p0: off.phi, p1: toPhi, a0: off.theta, a1: toTheta,
+    };
     this.orbit.enabled = false;
   }
 
@@ -206,13 +210,22 @@ export class CameraRig {
 
   update(dt) {
     const cam = this.camera;
+    // Frame-time smoothing: a single slow frame slows the animation briefly
+    // instead of making the camera jump.
+    this.smoothDt = this.smoothDt == null ? dt : this.smoothDt + (Math.min(dt, 1 / 20) - this.smoothDt) * 0.2;
     if (this.anim) {
       const a = this.anim;
-      a.t = Math.min(1, a.t + dt / a.dur);
+      a.t = Math.min(1, a.t + this.smoothDt / a.dur);
       const k = ease(a.t);
-      this.orbit.target.lerpVectors(a.fromTgt, a.toTgt, k);
-      cam.position.lerpVectors(a.fromPos, a.toPos, k);
-      cam.position.y += Math.sin(Math.PI * k) * a.lift;
+      // Target moves a little ahead of the orbit so the camera "leans" into the move.
+      const kt = ease(Math.min(1, a.t * 1.08));
+      this.orbit.target.lerpVectors(a.fromTgt, a.toTgt, kt);
+      const sph = new THREE.Spherical(
+        Math.exp(a.d0 + (a.d1 - a.d0) * k + a.bump * Math.sin(Math.PI * k)),
+        a.p0 + (a.p1 - a.p0) * k,
+        a.a0 + (a.a1 - a.a0) * k,
+      );
+      cam.position.copy(this.orbit.target).add(new THREE.Vector3().setFromSpherical(sph));
       cam.lookAt(this.orbit.target);
       if (a.t >= 1) {
         this.anim = null;
