@@ -56,6 +56,7 @@ export class InfoPanel {
     } catch {}
     const live = [];
     const jobs = [];
+    let summaryText = '';
     if (title) {
       jobs.push(
         wikiSummary(title).then((s) => {
@@ -66,6 +67,7 @@ export class InfoPanel {
           if (tag && !lm.tagline && s.description) tag.textContent = s.description[0].toUpperCase() + s.description.slice(1);
           const links = document.getElementById('info-links');
           if (links && s.url) links.insertAdjacentHTML('afterbegin', `<a href="${s.url}" target="_blank" rel="noopener">Wikipedia ↗</a>`);
+          summaryText = s.extract || '';
           if (!curated.length && s.extract) live.unshift({ t: s.extract.split(/(?<=\.)\s/).slice(0, 2).join(' '), w: 0 });
         }),
         wikiHighlights(title, curated).then((hs) => hs.forEach((h) => live.push({ t: h, w: 1 }))),
@@ -89,6 +91,10 @@ export class InfoPanel {
     const el = document.getElementById('info-live');
     if (!el) return;
     const items = live.sort((a, b) => a.w - b.w).slice(0, 5);
+    if (!items.length && summaryText) {
+      // Nothing scored as a highlight: show the article's own summary instead.
+      items.push({ t: summaryText.split(/(?<=\.)\s/).slice(0, 3).join(' ') });
+    }
     if (!items.length) {
       el.innerHTML = `<h4>From Wikipedia &amp; Wikidata</h4><div class="muted">${title || qid ? 'Could not reach Wikipedia right now.' : 'No Wikipedia article is linked to this place in OpenStreetMap.'}</div>`;
       return;

@@ -184,6 +184,7 @@ function setupLandmarks(data, places) {
     labels.add({ html: esc(w.name), cls: 'water click', x: w.x, z: w.z, y: 5, priority: 4, far: 9000, group: 'landmarks', onClick: river && /mutha|mula/i.test(w.name) ? () => openLandmark(river) : null });
   }
   for (const a of data.areaNames) {
+    if (/^[a-z]/.test(a.name) || a.name.length < 4) continue; // generic/untidy names like "forest"
     if (LM.list.some((l) => Math.hypot(l.x - a.x, l.z - a.z) < 300)) continue;
     labels.add({ html: `<span class="pin" style="background:${CATEGORY.park.color};color:#111">${CATEGORY.park.icon}</span>${esc(a.name)}`, cls: 'lm minor', x: a.x, z: a.z, y: 30, priority: 2, far: 2200, group: 'landmarks' });
   }
@@ -457,7 +458,8 @@ function setupUI(data) {
 
 function resetView(duration = 2.4) {
   const t = new THREE.Vector3(-150, city.ground(-150, 350), 350);
-  rig.flyTo(t, { distance: 4600, polar: 56, azimuth: -0.42, duration });
+  // Looking roughly north, so Viman Nagar sits top-right and Koregaon Park across the river below.
+  rig.flyTo(t, { distance: 4600, polar: 56, azimuth: -0.12, duration });
 }
 
 // ------------------------------------------------------------------ loop
@@ -536,6 +538,6 @@ window.addEventListener('resize', () => {
 
 // Expose for debugging in the console.
 window.__pune = {
-  get city() { return city; }, get rig() { return rig; }, camera, scene, renderer, U, setTime, THREE, atmosphere, openLandmark: (id) => openLandmark(LM.list.find((l) => l.id === id)),
+  get city() { return city; }, get rig() { return rig; }, camera, scene, renderer, U, setTime, THREE, atmosphere, pick, openLandmark: (id) => openLandmark(LM.list.find((l) => l.id === id)),
   look(x, z, distance, polar = 60, azimuth = 0) { rig.flyTo(new THREE.Vector3(x, city.ground(x, z), z), { distance, polar, azimuth, duration: 0.01 }); },
 };

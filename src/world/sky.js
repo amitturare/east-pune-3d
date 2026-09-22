@@ -210,7 +210,7 @@ export class Atmosphere {
     const fogNight = new THREE.Color(0.05, 0.07, 0.12);
     const fc = lerpC(fogNight, fogDay, day).lerp(fogGold, golden * 0.7);
     this.scene.fog.color.copy(fc);
-    this.scene.fog.density = 0.000075 + golden * 0.00003 + (1 - day) * 0.00002;
+    this.scene.fog.density = 0.00006 + golden * 0.00003 + (1 - day) * 0.00002;
     this.renderer.setClearColor(fc);
 
     // Night sky.

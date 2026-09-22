@@ -72,24 +72,43 @@ export class City {
     this.groups.terrain.add(mesh);
     this.terrainMesh = mesh;
 
-    // Surrounding land beyond the mapped area so the horizon is continuous.
+    // Surrounding land beyond the mapped area: a ring whose inner edge follows the
+    // terrain boundary exactly and whose outer edge fades into the haze.
     const ext = this.meta.ext;
-    const edge = this.hf.at(ext.minX + 50, ext.minZ + 50) * 0.25 + this.hf.at(ext.maxX - 50, ext.maxZ - 50) * 0.25 + this.hf.at(ext.minX + 50, ext.maxZ - 50) * 0.25 + this.hf.at(ext.maxX - 50, ext.minZ + 50) * 0.25;
-    const skirtMat = skirtMaterial(new THREE.Color(GROUND.base).multiplyScalar(0.95));
-    const R = 60000;
-    const rects = [
-      [ext.minX - R, ext.minZ - R, ext.maxX + R, ext.minZ], [ext.minX - R, ext.maxZ, ext.maxX + R, ext.maxZ + R],
-      [ext.minX - R, ext.minZ, ext.minX, ext.maxZ], [ext.maxX, ext.minZ, ext.maxX + R, ext.maxZ],
-    ];
-    for (const [x0, z0, x1, z1] of rects) {
-      const pg = new THREE.PlaneGeometry(x1 - x0, z1 - z0);
-      pg.rotateX(-Math.PI / 2);
-      const m = new THREE.Mesh(pg, skirtMat);
-      m.position.set((x0 + x1) / 2, edge - 1.5, (z0 + z1) / 2);
-      m.receiveShadow = true;
-      m.userData.baseY = edge - 1.5;
-      this.groups.terrain.add(m);
-    }
+    const ring = [];
+    const step = this.hf.cell * 2;
+    for (let x = ext.minX; x < ext.maxX; x += step) ring.push([x, ext.minZ]);
+    for (let z = ext.minZ; z < ext.maxZ; z += step) ring.push([ext.maxX, z]);
+    for (let x = ext.maxX; x > ext.minX; x -= step) ring.push([x, ext.maxZ]);
+    for (let z = ext.maxZ; z > ext.minZ; z -= step) ring.push([ext.minX, z]);
+    const cx = (ext.minX + ext.maxX) / 2, cz = (ext.minZ + ext.maxZ) / 2;
+    const edge = ring.reduce((s, [x, z]) => s + this.hf.at(x, z), 0) / ring.length;
+    const n = ring.length;
+    const pos = new Float32Array(n * 9), el = new Float32Array(n * 3), nor = new Float32Array(n * 9), idx = [];
+    ring.forEach(([x, z], i) => {
+      const dx = x - cx, dz = z - cz;
+      // inner (on the boundary), middle (1.5 km out), outer (60 km out)
+      pos.set([x, -0.05, z, cx + dx * 1.35, 0, cz + dz * 1.35, cx + dx * 14, 0, cz + dz * 14], i * 9);
+      el.set([this.hf.at(x, z), edge, edge], i * 3);
+      nor.set([0, 1, 0, 0, 1, 0, 0, 1, 0], i * 9);
+      const j = (i + 1) % n;
+      for (let k = 0; k < 2; k++) {
+        const a0 = i * 3 + k, a1 = i * 3 + k + 1, b0 = j * 3 + k, b1 = j * 3 + k + 1;
+        idx.push(a0, b0, a1, b0, b1, a1);
+      }
+    });
+    const rg = new THREE.BufferGeometry();
+    rg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    rg.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    rg.setAttribute('elev', new THREE.BufferAttribute(el, 1));
+    rg.setIndex(idx);
+    const skirtMat = structureMaterial();
+    skirtMat.color.set('#6f7349');
+    skirtMat.roughness = 1;
+    const skirt = new THREE.Mesh(rg, skirtMat);
+    skirt.frustumCulled = false;
+    skirt.receiveShadow = true;
+    this.groups.terrain.add(skirt);
     this.skirtEdge = edge;
     this.pickScene.add(new THREE.Mesh(g, pickOccluderMaterial()));
   }
@@ -289,7 +308,6 @@ export class City {
       });
       t.near.instanceMatrix.needsUpdate = true;
     }
-    for (const m of this.groups.terrain.children) if (m.userData.baseY != null) m.position.y = m.userData.baseY * k - (1 - k) * 0.5;
   }
 
   // Distance-based level of detail.
