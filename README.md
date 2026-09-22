@@ -46,7 +46,7 @@ The estimate never invents precise values. For example, a house is 2 storeys; ap
 
 ## Controls
 
-- **Explore mode.** Drag to orbit, right-drag to pan, scroll to zoom (zooms to the cursor).
+- **Explore mode (map-style).** Drag to move, right-drag or Ctrl/⌘/Shift+drag to rotate and tilt, scroll to zoom toward the cursor, double-click to zoom in on a spot. On touch screens, drag with one finger to move and pinch/twist with two. Keys: `W A S D` or arrows to move, `Q`/`E` to rotate, `R`/`G` to tilt, `+`/`−` to zoom. The on-screen `+`/`−` buttons also zoom. Any input interrupts a camera animation.
 - **Free flight.** Press `F` or use the camera toggle. `W A S D` to move, `Q`/`E` for down/up, `Shift` to boost, drag to look, scroll to change speed.
 - **Search.** Press `/` to search landmarks, neighbourhoods, roads and parks.
 - **Time of day.** Use the slider, the presets, or the ▶ time-lapse. The sun position is computed for Pune's latitude and longitude on today's date.

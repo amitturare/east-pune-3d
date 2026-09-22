@@ -416,8 +416,13 @@ function setupUI(data) {
     rig.setMode(m);
     document.querySelectorAll('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
     $('fly-hud').classList.toggle('hidden', m !== 'fly');
-    hint.textContent = m === 'fly' ? 'WASD to fly · Q/E down/up · Shift boost · drag to look · scroll changes speed' : 'Drag to orbit · Right-drag to pan · Scroll to zoom';
+    hint.innerHTML = m === 'fly'
+      ? '<b>WASD</b> fly · <b>Q/E</b> down/up · <b>Shift</b> boost · <b>drag</b> to look · <b>scroll</b> changes speed'
+      : '<b>Drag</b> to move · <b>Right-drag</b> or <b>Ctrl+drag</b> to rotate &amp; tilt · <b>Scroll</b> to zoom · <b>Double-click</b> to zoom in · Keys: <b>WASD</b> move, <b>Q/E</b> rotate, <b>R/G</b> tilt, <b>+/−</b> zoom';
   };
+  setMode('orbit'); // fills the hint
+  $('zoom-in').addEventListener('click', () => rig.zoom(0.55));
+  $('zoom-out').addEventListener('click', () => rig.zoom(1.8));
   rig.onSpeed = (s) => ($('fly-speed').textContent = Math.round(s));
   $('mode').addEventListener('click', (e) => e.target.dataset.mode && setMode(e.target.dataset.mode));
   $('reset-cam').addEventListener('click', () => { setMode('orbit'); resetView(); });
