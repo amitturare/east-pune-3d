@@ -200,7 +200,7 @@ export function structureMaterial() {
 
 // ------------------------------------------------------------------ water
 export function waterMaterial() {
-  const m = new THREE.MeshStandardMaterial({ color: 0x2b4a45, roughness: 0.06, metalness: 0.15, envMapIntensity: 1.1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
+  const m = new THREE.MeshStandardMaterial({ color: 0x2b4a45, roughness: 0.11, metalness: 0.15, envMapIntensity: 1.1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
   return withElevation(m, 'water', (shader) => {
     elevVertex(shader, `varying vec3 vWPos;`, ``);
     shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`);

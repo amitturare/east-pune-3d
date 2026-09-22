@@ -214,7 +214,9 @@ export class Life {
           pitch = THREE.MathUtils.degToRad(Math.min(12, over * 0.05));
         }
         const x = a[0] + ux * along, z = a[1] + uz * along;
-        const g = this.hf.at(a[0], a[1]) * k;
+        // Follow the runway surface while rolling; climb from the lift-off point.
+        const gd = Math.min(along, rollLen);
+        const g = this.hf.at(a[0] + ux * gd, a[1] + uz * gd) * k;
         this.plane.position.set(x, g + 3.2 + alt, z);
         this.plane.rotation.set(0, Math.atan2(ux, uz), 0);
         this.plane.rotateX(-pitch);

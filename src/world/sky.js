@@ -157,6 +157,8 @@ export class Atmosphere {
           float c = smoothstep(uCover, uCover + 0.22, d);
           float edge = length(vUv - 0.5) * 2.0;
           c *= 1.0 - smoothstep(0.55, 1.0, edge);
+          // Distant clouds pile up into a hard band at the horizon; fade them out.
+          c *= 1.0 - smoothstep(9000.0, 26000.0, length(vW.xz - cameraPosition.xz));
           float lit = smoothstep(uCover, uCover + 0.5, fbm(p + vec2(0.03)));
           vec3 col = mix(uSun, uShade, lit * 0.7);
           gl_FragColor = vec4(col, c * 0.82 * uAlpha);

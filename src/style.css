@@ -187,3 +187,20 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .zoom button + button { border-top: 1px solid var(--line); }
 .zoom button:hover { background: rgba(255,255,255,0.1); }
 .hint b { color: var(--text); font-weight: 600; }
+
+/* ---------- cinema mode (?cinema) ---------- */
+body.cinema .brand, body.cinema .search, body.cinema .controls, body.cinema .collapse-btn, body.cinema .compass,
+body.cinema .zoom, body.cinema #info, body.cinema #fly-hud, body.cinema .attribution, body.cinema #labels { display: none !important; }
+#cine { position: fixed; inset: 0; pointer-events: none; z-index: 40; color: #fff; }
+#cine > div { position: absolute; opacity: 0; }
+.cine-fade { inset: 0; background: #000; }
+.cine-title, .cine-end { left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; text-shadow: 0 2px 30px rgba(0,0,0,0.6); }
+.cine-kicker { font: 600 clamp(12px, 1.3vw, 20px) 'Inter', sans-serif; letter-spacing: 0.42em; text-transform: uppercase; opacity: 0.88; }
+.cine-big { font: 600 clamp(64px, 9vw, 160px)/1 'Fraunces', serif; letter-spacing: -0.02em; margin: 14px 0 12px; }
+.cine-big em { font-style: normal; color: var(--accent); }
+.cine-small { font: 500 clamp(14px, 1.45vw, 24px) 'Inter', sans-serif; letter-spacing: 0.08em; opacity: 0.92; }
+.cine-lower { left: 6vw; bottom: 9vh; display: flex; gap: 18px; align-items: stretch; text-shadow: 0 2px 18px rgba(0,0,0,0.65); }
+.cine-lower i { width: 4px; border-radius: 4px; background: var(--accent); box-shadow: 0 0 18px rgba(244,184,96,0.6); }
+.cine-name { font: 600 clamp(30px, 3.4vw, 60px)/1.1 'Fraunces', serif; letter-spacing: -0.01em; }
+.cine-sub { font: 500 clamp(14px, 1.35vw, 24px) 'Inter', sans-serif; margin-top: 8px; opacity: 0.94; letter-spacing: 0.02em; }
+.cine-url { margin-top: 26px; font: 600 clamp(13px, 1.25vw, 20px) 'Inter', sans-serif; letter-spacing: 0.06em; color: var(--accent); }

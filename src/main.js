@@ -88,6 +88,13 @@ async function init() {
   try { await renderer.compileAsync(scene, camera); } catch {}
   await warmup();
   setProgress(1, 'Ready');
+  if (params.has('cinema')) {
+    // Scripted, frame-by-frame film mode used to record the showcase video.
+    const { startCinema } = await import('./cinema.js');
+    startCinema({ renderer, composer, camera, scene, city, life, atmosphere, setTime, U, markers, reversed });
+    $('loader').classList.add('done');
+    return;
+  }
   $('loader').classList.add('done');
   resetView(3.2);
   loop();
