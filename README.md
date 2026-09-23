@@ -2,6 +2,8 @@
 
 An explorable, browser-based 3D model of East Pune — Viman Nagar, Kalyani Nagar, Koregaon Park, Yerawada, the airport and the Mula-Mutha river corridor — built from real OpenStreetMap data and SRTM elevation.
 
+**Live: https://east-pune-3d.vercel.app**
+
 ![Overview at golden hour](docs/overview.png)
 
 | Night | Landmark panel | Airport |

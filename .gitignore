@@ -4,3 +4,5 @@ data/raw
 data/*.log
 .DS_Store
 .claude/worktrees
+.vercel
+.env*
